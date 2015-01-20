@@ -23,95 +23,94 @@ var XRSnow = function() {
 	function init(){
 
 
-			//make snow
+		//make snow
 
-		if (XRConfig.snow){
+		if (!XRConfig.snow) return;
 
-			snowGeometry = new THREE.Geometry();
+		snowGeometry = new THREE.Geometry();
 
-			var snowSprite = THREE.ImageUtils.loadTexture( "res/img/snow.png" );
+		var snowSprite = THREE.ImageUtils.loadTexture( "res/img/snow.png" );
 
-			for ( i = 0; i < SNOW_COUNT; i ++ ) {
+		for ( i = 0; i < SNOW_COUNT; i ++ ) {
 
-				var vertex = new THREE.Vector3();
-				vertex.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
-				vertex.y = ATUtil.randomRange(-300,1200);
-				vertex.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
+			var vertex = new THREE.Vector3();
+			vertex.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
+			vertex.y = ATUtil.randomRange(-300,1200);
+			vertex.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
 
-				snowGeometry.vertices.push( vertex );
-
-			}
-
-			var snowMaterial = new THREE.PointCloudMaterial( { 
-				size: 50, 
-				sizeAttenuation: true, 
-				map: snowSprite, 
-				transparent: true ,
-				blending: THREE.AdditiveBlending,
-				depthTest: true,
-				opacity:0.7
-			} );
-
-			var particles = new THREE.PointCloud( snowGeometry, snowMaterial );
-			XRGame.getMoverGroup().add( particles );
-
-			//STRIPS
-			//add bars for at high speed
-
-			barMaterial = new THREE.MeshBasicMaterial({
-				color: 0x0FF66FF,
-				blending: THREE.AdditiveBlending,
-				depthTest: false,
-				transparent: true,
-				opacity:.6,
-				sizeAttenuation: true,
-				side: THREE.DoubleSide,
-			});
-
-			var width = 4;
-			var spread =  1000;
-
-			var barGeom = new THREE.PlaneGeometry(20,500,1,1);
-
-			bars = [];
-
-			for (i = 0; i < barCount; i++) {
-
-				var bar = new THREE.Mesh( barGeom, barMaterial );
-
-				bar.scale.x = ATUtil.randomRange(0.2,2);
-				bar.origYScale = ATUtil.randomRange(0.2,2);
-				bar.scale.z = ATUtil.randomRange(0.2,2);
-
-				XRGame.getMoverGroup().add( bar );
-
-				bar.rotation.x = Math.PI/2;
-				bar.rotation.y = Math.PI/2;
-
-				bar.position.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
-				bar.position.y = ATUtil.randomRange(-300,600);
-				bar.position.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
-
-				bars.push(bar);
-
-			}
-
-			//SKY
-			textureSky = THREE.ImageUtils.loadTexture( "res/img/xmas-sky.jpg" );
-			skyMaterial = new THREE.MeshBasicMaterial( {
-				map:textureSky,
-				transparent:true,
-				depthTest: true,
-			} );
-
-			var planeGeometry = new THREE.PlaneGeometry( 800, 300,1,1 );
-			skyMesh = new THREE.Mesh( planeGeometry, skyMaterial );
-			XRMain.getScene().add( skyMesh );			
-			skyMesh.scale.x = skyMesh.scale.y = 15;
-			skyMesh.position.z = -2000;
-			skyMesh.position.y = 1500;
+			snowGeometry.vertices.push( vertex );
 
 		}
+
+		var snowMaterial = new THREE.PointCloudMaterial( { 
+			size: 50, 
+			sizeAttenuation: true, 
+			map: snowSprite, 
+			transparent: true ,
+			blending: THREE.AdditiveBlending,
+			depthTest: true,
+			opacity:0.7,
+			depthWrite:false
+		} );
+
+		var particles = new THREE.PointCloud( snowGeometry, snowMaterial );
+		XRGame.getMoverGroup().add( particles );
+
+		//STRIPS
+		//add bars for at high speed
+
+		barMaterial = new THREE.MeshBasicMaterial({
+			color: 0x0FF66FF,
+			blending: THREE.AdditiveBlending,
+			depthTest: false,
+			transparent: true,
+			opacity:.6,
+			sizeAttenuation: true,
+			side: THREE.DoubleSide,
+		});
+
+		var width = 4;
+		var spread =  1000;
+
+		var barGeom = new THREE.PlaneGeometry(20,500,1,1);
+
+		bars = [];
+
+		for (i = 0; i < barCount; i++) {
+
+			var bar = new THREE.Mesh( barGeom, barMaterial );
+
+			bar.scale.x = ATUtil.randomRange(0.2,2);
+			bar.origYScale = ATUtil.randomRange(0.2,2);
+			bar.scale.z = ATUtil.randomRange(0.2,2);
+
+			XRGame.getMoverGroup().add( bar );
+
+			bar.rotation.x = Math.PI/2;
+			bar.rotation.y = Math.PI/2;
+
+			bar.position.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
+			bar.position.y = ATUtil.randomRange(-300,600);
+			bar.position.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
+
+			bars.push(bar);
+
+		}
+
+		//SKY
+		textureSky = THREE.ImageUtils.loadTexture( "res/img/xmas-sky.jpg" );
+		skyMaterial = new THREE.MeshBasicMaterial( {
+			map:textureSky,
+			transparent:true,
+			depthTest: true,
+		} );
+
+		var planeGeometry = new THREE.PlaneGeometry( 800, 300,1,1 );
+		skyMesh = new THREE.Mesh( planeGeometry, skyMaterial );
+		XRMain.getScene().add( skyMesh );			
+		skyMesh.scale.x = skyMesh.scale.y = 15;
+		skyMesh.position.z = -2000;
+		skyMesh.position.y = 1500;
 
 	}
 

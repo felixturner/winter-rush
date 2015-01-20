@@ -7,7 +7,7 @@
 //global
 var XRConfig = {
 	playSound:true,
-	playMusic:true,
+	playMusic:false,
 	snow:true,
 	hitDetect:true,
 	showPresent:true,
@@ -125,12 +125,20 @@ var XRMain = function() {
 		animate();
 
 		//fade in
-		TweenLite.fromTo(fxParams , 1, {brightness: -1},{brightness:0,delay:0.5});
-		TweenLite.fromTo($('#splash') , 1, {autoAlpha: 0},{autoAlpha: 1,delay:1});
-		TweenLite.fromTo($('#info') , 1, {autoAlpha: 0},{autoAlpha: 1,delay:1});
-		TweenLite.fromTo($('#music-toggle') , 1, {autoAlpha: 0},{autoAlpha: 1,delay:1});
+		TweenMax.fromTo(fxParams , 1, {brightness: -1},{brightness:0,delay:0.5});
+		TweenMax.fromTo($('#splash') , 1, {autoAlpha: 0},{autoAlpha: 1,delay:1});
+		TweenMax.fromTo($('#info') , 1, {autoAlpha: 0},{autoAlpha: 1,delay:1});
+		TweenMax.fromTo($('#music-toggle') , 1, {autoAlpha: 0},{autoAlpha: 1,delay:1});
 
 		$("#preloader").css("display","none");
+
+		//preload splash page images
+		var img1 = new Image();
+		img1.src = "res/img/xmas-splash.png";
+		var img2 = new Image();
+		img2.src = "res/img/xmas-best.png";
+		var img3 = new Image();
+		img3.src = "res/img/xmas-wipeout.png";
 
 	}
 
@@ -167,7 +175,7 @@ var XRMain = function() {
 
 		//scale to fit and center splash
 		splashSize = Math.min(w,h)*0.85;
-		splashSize = Math.min(splashSize,700);
+		splashSize = Math.min(splashSize,500);
 
 		$("#splash").css("width", splashSize + "px");
 		$("#splash").css("height", splashSize+ "px");
@@ -202,7 +210,7 @@ var XRMain = function() {
 		if (XRConfig.playSound) sndPickup.play();
 		score += 1;
 		$("#score-text").text(score);
-		TweenLite.fromTo($('#score-text') , 0.4, {scale: 2},{scale: 1,ease:Bounce.easeOut});
+		TweenMax.fromTo($('#score-text') , 0.4, {scale: 2},{scale: 1,ease:Bounce.easeOut});
 
 		if (score === hiScore + 1 && hiScore !== 0){
 			if (XRConfig.playSound) sndBest.play();
@@ -214,10 +222,10 @@ var XRMain = function() {
 		if (XRConfig.playSound) sndCollide.play();
 
 		//display score
-		TweenLite.to($('#score-text') , 0.1, {autoAlpha: 0});
-		TweenLite.fromTo($('#splash') , 0.5, {scale: 0.6,autoAlpha: 0},{scale: 1,autoAlpha: 1,ease:Expo.easeOut});
-		TweenLite.fromTo($('#info') , 0.5, {autoAlpha: 0},{autoAlpha: 1});
-		TweenLite.fromTo($('#music-toggle') , 0.5, {autoAlpha: 0},{autoAlpha: 1});
+		TweenMax.to($('#score-text') , 0.1, {autoAlpha: 0});
+		TweenMax.fromTo($('#splash') , 0.5, {scale: 0.6,autoAlpha: 0},{scale: 1,autoAlpha: 1,ease:Expo.easeOut});
+		TweenMax.fromTo($('#info') , 0.5, {autoAlpha: 0},{autoAlpha: 1});
+		TweenMax.fromTo($('#music-toggle') , 0.5, {autoAlpha: 0},{autoAlpha: 1});
 
 		if (score > hiScore){
 			splashMode = 1;
@@ -243,10 +251,10 @@ var XRMain = function() {
 	}
 
 	function onGameStart(){
-		TweenLite.to($('#splash') , 0.3, {autoAlpha: 0});
-		TweenLite.to($('#info') , 0.3, {autoAlpha: 0});
-		TweenLite.to($('#music-toggle') , 0.3, {autoAlpha: 0});
-		TweenLite.to($('#score-text') , 0.3, {autoAlpha: 1,delay:0.3});
+		TweenMax.to($('#splash') , 0.3, {autoAlpha: 0});
+		TweenMax.to($('#info') , 0.3, {autoAlpha: 0});
+		TweenMax.to($('#music-toggle') , 0.3, {autoAlpha: 0});
+		TweenMax.to($('#score-text') , 0.3, {autoAlpha: 1,delay:0.3});
 		score = 0;
 		$("#score-text").text(score);
 

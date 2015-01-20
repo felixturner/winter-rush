@@ -70,9 +70,9 @@ body {
 #info{
 	opacity:0;
 	position:absolute;
-	bottom:10px;
+	bottom:15px;
 	padding:0 10px;
-	font-size:18px;
+	font-size:14px;
 	text-shadow: 0 0 3px rgba(0,0,0,0.7);
 	width:100%;
 	text-align: center;
