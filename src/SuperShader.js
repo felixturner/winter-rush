@@ -2,7 +2,7 @@
   Winter Rush Super Shader
   Simple color manipulation
   Combines Vignette & BrightnessContrast & Hue/Saturation
-  by Felix Turner / www.airtight.cc / @felixturner
+  by Felix Turner / @felixturner / www.airtight.cc
  */
 
 THREE.SuperShader = {

@@ -1,13 +1,15 @@
 /**
 	Winter Rush Snow
-	Snow + bars + sky
-	by Felix Turner / www.airtight.cc / @felixturner
+	Handles falling snow, bars, sky
+	by Felix Turner / @felixturner / www.airtight.cc
 **/
 
 var XRSnow = function() {
 
 	var SNOW_COUNT = 400;
 	var SNOW_EDGE = 100;
+	var SNOW_TOP = 1600;
+	var SNOW_BOTTOM = -300;
 	
 	var snow = [];
 	var windDir = 0;
@@ -23,10 +25,7 @@ var XRSnow = function() {
 	function init(){
 
 
-		//make snow
-
-		if (!XRConfig.snow) return;
-
+		//make falling snow
 		snowGeometry = new THREE.Geometry();
 
 		var snowSprite = THREE.ImageUtils.loadTexture( "res/img/snow.png" );
@@ -35,7 +34,7 @@ var XRSnow = function() {
 
 			var vertex = new THREE.Vector3();
 			vertex.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
-			vertex.y = ATUtil.randomRange(-300,1200);
+			vertex.y = ATUtil.randomRange(SNOW_BOTTOM,SNOW_TOP);
 			vertex.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
 
 			snowGeometry.vertices.push( vertex );
@@ -117,19 +116,17 @@ var XRSnow = function() {
 	function shift(){
 
 
-		if (XRConfig.snow){
-			for(  i = 0; i < SNOW_COUNT; i++) {
+		for(  i = 0; i < SNOW_COUNT; i++) {
 
-				var vert = snowGeometry.vertices[i];
-				vert.z += MOVE_STEP;
+			var vert = snowGeometry.vertices[i];
+			vert.z += MOVE_STEP;
 
-				if (vert.z + XRGame.getMoverGroup().position.z > FLOOR_DEPTH/2){
-					vert.z	-= FLOOR_DEPTH;
-				}			 
+			if (vert.z + XRGame.getMoverGroup().position.z > FLOOR_DEPTH/2){
+				vert.z	-= FLOOR_DEPTH;
+			}			 
 
-			}
-			snowGeometry.verticesNeedUpdate = true;
 		}
+		snowGeometry.verticesNeedUpdate = true;
 
 		for (i = 0; i < barCount; i++) {
 			var p = bars[i].position;
@@ -144,56 +141,52 @@ var XRSnow = function() {
 
 	function animate(){
 
+		//global perlin wind
+		snowTime += 0.001;
+		windStrength = snoise.noise(snowTime,0,0)*20;
+		windDir = (snoise.noise(snowTime + 100,0,0) + 1)/2 * Math.PI*2;
 
-		if (XRConfig.snow){
+		for(  i = 0; i < SNOW_COUNT; i++) {
+			var vert = snowGeometry.vertices[i];
 
-			//global perlin wind
-			snowTime += 0.001;
-			windStrength = snoise.noise(snowTime,0,0)*20;
-			windDir = (snoise.noise(snowTime + 100,0,0) + 1)/2 * Math.PI*2;
+			//gravity
+			vert.y -= 3;
 
-			for(  i = 0; i < SNOW_COUNT; i++) {
-				var vert = snowGeometry.vertices[i];
-
-				//gravity
-				vert.y -= 3;
-
-				//bounds wrapping
-				if (vert.y < -300){
-					vert.y = 1200;
-				}
-
-				//only do fancy wind if not playing
-				if (!XRGame.getPlaying()){
-
-					vert.x += Math.cos(windDir)*windStrength;
-					vert.z += Math.sin(windDir)*windStrength;
-
- 					//wrap around edges
-					if (vert.x > FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = -FLOOR_WIDTH/2 + SNOW_EDGE;
-					if (vert.x < -FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = FLOOR_WIDTH/2 + SNOW_EDGE;
-
-					if (vert.z > FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = -FLOOR_DEPTH/2 + SNOW_EDGE;
-					if (vert.z < -FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = FLOOR_DEPTH/2 + SNOW_EDGE;
-			
-				}
-
+			//bounds wrapping
+			if (vert.y < SNOW_BOTTOM){
+				vert.y = SNOW_TOP;
 			}
-			snowGeometry.verticesNeedUpdate = true;
 
-			var opac = (XRGame.getSpeed() - 0.5) *2;
+			//only do fancy wind if not playing
+			if (!XRGame.getPlaying()){
 
-			barMaterial.opacity = opac*2/3;
-			skyMaterial.opacity = opac;
+				vert.x += Math.cos(windDir)*windStrength;
+				vert.z += Math.sin(windDir)*windStrength;
 
-			for (i = 0; i < barCount; i++) {
-				var p = bars[i].position;
-				p.z +=40;
+					//wrap around edges
+				if (vert.x > FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = -FLOOR_WIDTH/2 + SNOW_EDGE;
+				if (vert.x < -FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = FLOOR_WIDTH/2 + SNOW_EDGE;
 
-				bars[i].scale.y = bars[i].origYScale * opac;
+				if (vert.z > FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = -FLOOR_DEPTH/2 + SNOW_EDGE;
+				if (vert.z < -FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = FLOOR_DEPTH/2 + SNOW_EDGE;
+		
 			}
 
 		}
+		snowGeometry.verticesNeedUpdate = true;
+
+		var opac = (XRGame.getSpeed() - 0.5) *2;
+
+		barMaterial.opacity = opac*2/3;
+		skyMaterial.opacity = opac;
+
+		for (i = 0; i < barCount; i++) {
+			var p = bars[i].position;
+			p.z +=40;
+
+			bars[i].scale.y = bars[i].origYScale * opac;
+		}
+
 
 	}
 

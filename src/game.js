@@ -1,56 +1,42 @@
 /**
 	Winter Rush Game
-	Gameplay + field
-	by Felix Turner / www.airtight.cc / @felixturner
+	Handles track, trees, motion, hit detection
+	by Felix Turner / @felixturner / www.airtight.cc
 **/
 
-//global
-var snoise = new ImprovedNoise();
-var FLOOR_WIDTH = 3600; //x
-var FLOOR_DEPTH = 7200; //z
-var MOVE_STEP = 500; //number of z units to move before recreating a new background strip
-
 var XRGame = function() {
-
-	var debugGeometry, debugMaterial, debugMesh;
-	
-	var clock;
-	
-	var moverGroup;
-	var presentGroup;
-	var stepCount = 0;
 
 	var ACCEL = 2000;
 	var MAX_SPEED_ACCEL = 70;
 	var START_MAX_SPEED = 1500;
 	var FINAL_MAX_SPEED = 7000;
-
-	var moveSpeed = 0; //z-units per second
-	var maxSpeed; //increments over time
-
-	var slideSpeed = 0;
 	var SIDE_ACCEL = 500;
 	var MAX_SIDE_SPEED = 4000;
+	var TREE_COLS = [0x466310,0x355B4B,0x449469];//,0x4e8c28];
+	var TREE_COUNT = 10;
+	var FLOOR_RES = 20;
+	var FLOOR_YPOS = -300; //y
+	var FLOOR_THICKNESS = 300;//250;
+
+	var stepCount = 0;
+	var moveSpeed = 0; //z-units per second
+	var maxSpeed; //increments over time
+	var slideSpeed = 0;
 	var sliding = false;
+
 	var rightDown = false;
 	var leftDown = false;
+	var playing = false;
+	var clock;
 
 	var trees = [];
-	var TREE_COUNT = 10;
 
 	var noiseScale = 3;
 	var noiseSeed = Math.random() * 100;
 
-	var FLOOR_RES = 20;
-	
-	var FLOOR_YPOS = -300; //y
-	var FLOOR_THICKNESS = 300;//250;
-
+	var moverGroup;
+	var presentGroup;
 	var floorGeometry;
-	var splash;
-	var playing = false;
-
-	var TREE_COLS = [0x466310,0x355B4B,0x5D763F];
 	var treeMaterials;
 	var trunkMaterial;
 	var treeGeom;
@@ -70,13 +56,20 @@ var XRGame = function() {
 		hemisphereLight.position.y = 300;
 
 		//middle light
-		var centerLight = new THREE.PointLight( 0xFFFFFF, 0.5, 4500 );
+		var centerLight = new THREE.PointLight( 0xFFFFFF, 0.8, 4500 );
 		XRMain.getScene().add(centerLight);
 		centerLight.position.z = FLOOR_DEPTH/4;
+		centerLight.position.y = 500;
 
 		var frontLight = new THREE.PointLight( 0xFFFFFF, 1, 2500 );
 		XRMain.getScene().add(frontLight);
 		frontLight.position.z = FLOOR_DEPTH/2;
+		//frontLight.position.y = 500;
+		//frontLight.position.z = -200;
+		//XRMain.getCamera().add(frontLight);
+
+		//var axis = new THREE.AxisHelper(200);
+		//frontLight.add(axis);
 
 		moverGroup = new THREE.Object3D();
 		XRMain.getScene().add( moverGroup );
@@ -85,12 +78,9 @@ var XRGame = function() {
 		var floorGroup = new THREE.Object3D();
 
 		var floorMaterial = new THREE.MeshLambertMaterial({
-			color: 0xEEEEEE, //diffuse							
+			color: 0xCCCCCC, //diffuse							
 			emissive: 0x000000, 
 			shading: THREE.FlatShading, 
-			blending: THREE.NormalBlending, 
-			transparent: false,
-			opacity: 1.0	,
 			side: THREE.DoubleSide,
 		});
 
@@ -100,6 +90,7 @@ var XRGame = function() {
 		floorGroup.add( floorMesh );
 		moverGroup.add( floorGroup );
 		floorMesh.rotation.x = Math.PI/2;
+		//floorMesh.rotation.z = Math.PI/2;
 		floorGroup.position.y = FLOOR_YPOS;
 		moverGroup.position.z = - MOVE_STEP;
 		floorGroup.position.z = 500;
@@ -111,14 +102,9 @@ var XRGame = function() {
 		for(  i= 0; i < TREE_COLS.length; i++) {
 
 			var treeMaterial = new THREE.MeshLambertMaterial({
-
 				color: TREE_COLS[i],				
 				shading: THREE.FlatShading, 
-				blending: THREE.NormalBlending, 
-				depthTest: true,
-				transparent: false,
-				opacity: 1.0,
-						
+				depthTest: true,						
 			});
 			treeMaterials.push(treeMaterial);
 		}
@@ -133,7 +119,7 @@ var XRGame = function() {
 			});
 
 		trunkGeom = new THREE.CylinderGeometry(50, 50, 200, 8, 1, false);
-		treeGeom = new THREE.CylinderGeometry(0, 200, 1200, 8, 1, false);
+		treeGeom = new THREE.CylinderGeometry(0, 250, 1200, 8, 1, false);
 
 		var tree;
 		for( i = 0; i < TREE_COUNT; i++) {
@@ -141,12 +127,12 @@ var XRGame = function() {
 			var scl = ATUtil.randomRange(0.8,1.3);
 			var matID = i%TREE_COLS.length;
 			tree = makeTree(scl,matID);
-
 			moverGroup.add( tree );
 			tree.posi = Math.random();
 			tree.posj = Math.random();
 			tree.position.x = tree.posj * FLOOR_WIDTH - FLOOR_WIDTH/2;
 			tree.position.z = - (tree.posi * FLOOR_DEPTH) + FLOOR_DEPTH/2;
+			tree.rotation.y = Math.random()*Math.PI*2;
 			trees.push(tree);
 			tree.collided = false;
 		}
@@ -168,41 +154,36 @@ var XRGame = function() {
 			tree.position.z = FLOOR_DEPTH * i/EDGE_TREE_COUNT -  FLOOR_DEPTH/2;
 		}
 
-
 		//add floating present
+		presentGroup = new THREE.Object3D();
+		moverGroup.add( presentGroup );
 
-		if(XRConfig.showPresent){
+		presentGroup.position.x = ATUtil.randomRange(-FLOOR_WIDTH/2, FLOOR_WIDTH/2);
+		presentGroup.position.z = ATUtil.randomRange(-FLOOR_DEPTH/2, FLOOR_DEPTH/2);
+		//presentGroup.position.y = 200;
 
-			presentGroup = new THREE.Object3D();
-			moverGroup.add( presentGroup );
+		var presentMaterial = new THREE.MeshPhongMaterial({
+			color: 0xFF0000, 
+			specular: 0x00FFFF, 
+			emissive: 0x0000FF, 
+			shininess: 60, 
+			shading: THREE.FlatShading, 
+			blending: THREE.NormalBlending, 
+			depthTest: true,
+			transparent: false,
+			opacity: 1.0		
+		});
 
-			presentGroup.position.x = ATUtil.randomRange(-FLOOR_WIDTH/2, FLOOR_WIDTH/2);
-			presentGroup.position.z = ATUtil.randomRange(-FLOOR_DEPTH/2, FLOOR_DEPTH/2);
-			//presentGroup.position.y = 200;
+		var presentGeom = new THREE.TetrahedronGeometry(100, 2);
 
-			var presentMaterial = new THREE.MeshPhongMaterial({
-				color: 0xFF0000, 
-				specular: 0x00FFFF, 
-				emissive: 0x0000FF, 
-				shininess: 60, 
-				shading: THREE.FlatShading, 
-				blending: THREE.NormalBlending, 
-				depthTest: true,
-				transparent: false,
-				opacity: 1.0		
-			});
+		var present = new THREE.Mesh( presentGeom, presentMaterial );
+		presentGroup.add( present );
 
-			var presentGeom = new THREE.TetrahedronGeometry(100, 2);
+		//PointLight(hex, intensity, distance)
+		var presentLight = new THREE.PointLight( 0xFF00FF, 1.2, 600 );
+		presentGroup.add( presentLight );
 
-			var present = new THREE.Mesh( presentGeom, presentMaterial );
-			presentGroup.add( present );
-
-			//PointLight(hex, intensity, distance)
-			var presentLight = new THREE.PointLight( 0xFF00FF, 1.2, 600 );
-			presentGroup.add( presentLight );
-
-			presentGroup.collided = false;
-		}				
+		presentGroup.collided = false;
 
 		
 		XRSnow.init();
@@ -247,7 +228,7 @@ var XRGame = function() {
 
 		for( i = 0; i < FLOOR_RES + 1; i++) {
 			for( var j = 0; j < FLOOR_RES + 1; j++) {
-				 ipos = i + offset;
+				ipos = i + offset;
 				floorGeometry.vertices[i * (FLOOR_RES + 1)+ j].z = snoise.noise(ipos/FLOOR_RES * noiseScale, j/FLOOR_RES * noiseScale, noiseSeed ) * FLOOR_THICKNESS;
 			}
 		}
@@ -274,19 +255,16 @@ var XRGame = function() {
 		XRSnow.shift();
 
 		//shift present
-		if(XRConfig.showPresent){
-
-			presentGroup.position.z += MOVE_STEP;
-			if (presentGroup.position.z + moverGroup.position.z > FLOOR_DEPTH/2){
-				presentGroup.collided = false;
-				presentGroup.position.z	-= FLOOR_DEPTH;
-				//re-randomize x pos
-				presentGroup.posj = Math.random();
-				var xRange = FLOOR_WIDTH/2 * 0.7;
-				presentGroup.position.x = ATUtil.randomRange(-xRange,xRange);
-			
-			}		
-		}
+		presentGroup.position.z += MOVE_STEP;
+		if (presentGroup.position.z + moverGroup.position.z > FLOOR_DEPTH/2){
+			presentGroup.collided = false;
+			presentGroup.position.z	-= FLOOR_DEPTH;
+			//re-randomize x pos
+			presentGroup.posj = Math.random();
+			var xRange = FLOOR_WIDTH/2 * 0.7;
+			presentGroup.position.x = ATUtil.randomRange(-xRange,xRange);
+		
+		}		
 
 	}
 
@@ -297,29 +275,18 @@ var XRGame = function() {
 
 		var delta = clock.getDelta();	
 
+		//PLAYER MOVEMENT
 		if (playing){
 		
-			//max speed accelrate slowly
+			//max speed accelerates slowly
 			maxSpeed += delta *MAX_SPEED_ACCEL;
 			maxSpeed = Math.min(maxSpeed,FINAL_MAX_SPEED);
 
 			//move speed accelerates quickly after a collision
 			moveSpeed += delta *ACCEL;
 			moveSpeed = Math.min(moveSpeed,maxSpeed);
-		}else{
-			moveSpeed *= 0.95;
 
-		}
-
-		if(XRConfig.showPresent){
-			presentGroup.rotation.x += 0.01;
-			presentGroup.rotation.y += 0.02;
-		}
-
-		//PLAYER MOVEMENT
-		//right takes precedence
-		if (playing){
-
+			//right takes precedence
 			if (rightDown){
 
 				slideSpeed += SIDE_ACCEL;
@@ -349,7 +316,16 @@ var XRGame = function() {
 			//moverGroup.rotation.z = 0.016 * slideSpeed * 0.003;
 			moverGroup.rotation.z = slideSpeed * 0.000038;
 
+		}else{
+			//slow down after dead
+			moveSpeed *= 0.95;
+
 		}
+
+		presentGroup.rotation.x += 0.01;
+		presentGroup.rotation.y += 0.02;
+
+	
 
 		moverGroup.position.z += delta * moveSpeed;
 
@@ -370,15 +346,13 @@ var XRGame = function() {
 			var camPos = XRMain.getCamera().position.clone();
 			camPos.z -= 200;
 
-			if(XRConfig.showPresent){
-				p = presentGroup.position.clone();
-				p.add(moverGroup.position);
-				dist = p.distanceTo(camPos);
-				if (dist < 200 && !presentGroup.collided){
-					//GOT POINT
-					presentGroup.collided = true;
-					XRMain.onScorePoint();
-				}
+			p = presentGroup.position.clone();
+			p.add(moverGroup.position);
+			dist = p.distanceTo(camPos);
+			if (dist < 200 && !presentGroup.collided){
+				//GOT POINT
+				presentGroup.collided = true;
+				XRMain.onScorePoint();
 			}
 
 

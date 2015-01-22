@@ -1,18 +1,23 @@
 /**
 	Winter Rush Main
 	Handles input, sounds, renderer, resize, score display
-	by Felix Turner / www.airtight.cc / @felixturner
+	by Felix Turner / @felixturner / www.airtight.cc
 **/
 
-//global
+//Global Config
 var XRConfig = {
 	playSound:true,
-	playMusic:false,
-	snow:true,
+	playMusic:true,
 	hitDetect:true,
-	showPresent:true,
 	showDebug:true
 };
+
+//global
+var FLOOR_WIDTH = 3600; //x
+var FLOOR_DEPTH = 7200; //z
+var MOVE_STEP = 500; //number of z units to move before recreating a new background strip
+
+var snoise = new ImprovedNoise();
 
 var XRMain = function() {
 
@@ -25,18 +30,20 @@ var XRMain = function() {
 	var fxParams = {
 		vignetteAmount:0.8,
 		brightness:0,
-		contrast: 0,
 		saturation: 0.5,
 	};
 
 	var hiScore = 0;
 	var score = 0;
+
 	var sndPickup;
 	var sndCollide;
 	var sndMusic;
+	
 	var lastEvent;
 	var stats;
 	var splashSize;
+	
 	var bkgndColor = 0x061837;
 	var isMobile = false;
 
@@ -46,16 +53,16 @@ var XRMain = function() {
 	
 	function init() {
 
-		XRConfig.showDebug = getParameterByName('debug');
+		XRConfig.showDebug = window.location.href.indexOf("?dev");
 
 		if (XRConfig.showDebug){
-
-			console.log("PPPP");
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
-			stats.domElement.style.top = '0px';
-			stats.domElement.style.left = '0px';
+			stats.domElement.style.top = '30px';
+			stats.domElement.style.left = '40px';
 			$("#container").append( stats.domElement );
+			stats.domElement.style.transform = "scale(2,2)";
+			stats.domElement.style.webkitTransform = "scale(2,2)";
 		}
 
 		isMobile = !!('ontouchstart' in window); //true for android or ios, false for MS surface
@@ -258,7 +265,7 @@ var XRMain = function() {
 		score = 0;
 		$("#score-text").text(score);
 
-		if (isFirstGame && XRConfig.playMusic) sndMusic.play();						
+		if (isFirstGame && XRConfig.playMusic ) sndMusic.play();						
 
 		XRGame.startGame(isFirstGame);
 		isFirstGame = false;
@@ -287,7 +294,7 @@ var XRMain = function() {
 		superPass.uniforms.brightness.value =  fxParams.brightness;
 		composer.render( 0.1 );
 
-		XRMain.trace( XRGame.getSpeed());
+		//XRMain.trace( XRGame.getSpeed());
 
 	}
 
@@ -387,13 +394,6 @@ var XRMain = function() {
 	// 	XRGame.setRightDown(tiltedRight);
 	// 	XRGame.setLeftDown(tiltedLeft);
 	// }
-
-	function getParameterByName(name) {
-		name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-			results = regex.exec(location.search);
-		return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-	}
 
 	return {
 		init:init,
