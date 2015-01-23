@@ -10,4 +10,4 @@ http://airtightinteractive.com/projects/winter-rush/
 Download this Repo. Run index.html from a local webserver.
 
 #### More Info
-Check out the Blog Post
+Check out the [Blog Post](http://www.airtightinteractive.com/2015/01/building-a-60fps-webgl-game-on-mobile/)
