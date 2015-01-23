@@ -1,12 +1,12 @@
 ![](http://www.airtightinteractive.com/projects/winter-rush/winter-rush-740.jpg)
 
 # winter-rush
-Winter Rush mobile game source as featured on christmasexperiments.com.
+Winter Rush mobile game source as featured on [christmasexperiments.com](http://christmasexperiments.com/). Winter Rush is a mobile friendly WebGL game designed to run at close to 60FPS.
 
-### Play Game: 
+#### Play Game: 
 http://airtightinteractive.com/projects/winter-rush/
 
-### To Run Locally
+#### To Run Locally
 Download this Repo. Run index.html from a local webserver.
 
 #### More Info
