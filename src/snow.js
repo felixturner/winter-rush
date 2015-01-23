@@ -102,13 +102,14 @@ var XRSnow = function() {
 			map:textureSky,
 			transparent:true,
 			depthTest: true,
+			fog:false
 		} );
 
 		var planeGeometry = new THREE.PlaneGeometry( 800, 300,1,1 );
 		skyMesh = new THREE.Mesh( planeGeometry, skyMaterial );
 		XRMain.getScene().add( skyMesh );			
 		skyMesh.scale.x = skyMesh.scale.y = 15;
-		skyMesh.position.z = -2000;
+		skyMesh.position.z = -3600;
 		skyMesh.position.y = 1500;
 
 	}

@@ -12,7 +12,7 @@ var XRGame = function() {
 	var FINAL_MAX_SPEED = 7000;
 	var SIDE_ACCEL = 500;
 	var MAX_SIDE_SPEED = 4000;
-	var TREE_COLS = [0x466310,0x355B4B,0x449469];//,0x4e8c28];
+	var TREE_COLS = [0x466310,0x355B4B,0x449469];
 	var TREE_COUNT = 10;
 	var FLOOR_RES = 20;
 	var FLOOR_YPOS = -300; //y
@@ -64,12 +64,6 @@ var XRGame = function() {
 		var frontLight = new THREE.PointLight( 0xFFFFFF, 1, 2500 );
 		XRMain.getScene().add(frontLight);
 		frontLight.position.z = FLOOR_DEPTH/2;
-		//frontLight.position.y = 500;
-		//frontLight.position.z = -200;
-		//XRMain.getCamera().add(frontLight);
-
-		//var axis = new THREE.AxisHelper(200);
-		//frontLight.add(axis);
 
 		moverGroup = new THREE.Object3D();
 		XRMain.getScene().add( moverGroup );
