@@ -58,11 +58,9 @@ var XRMain = function() {
 		if (XRConfig.showDebug){
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
-			stats.domElement.style.top = '30px';
-			stats.domElement.style.left = '40px';
+			stats.domElement.style.top = '0px';
+			stats.domElement.style.left = '0px';
 			$("#container").append( stats.domElement );
-			stats.domElement.style.transform = "scale(2,2)";
-			stats.domElement.style.webkitTransform = "scale(2,2)";
 		}
 
 		isMobile = !!('ontouchstart' in window); //true for android or ios, false for MS surface
