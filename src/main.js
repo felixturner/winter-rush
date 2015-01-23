@@ -53,7 +53,7 @@ var XRMain = function() {
 	
 	function init() {
 
-		XRConfig.showDebug = window.location.href.indexOf("?dev");
+		XRConfig.showDebug = window.location.href.indexOf("?dev")  > -1;
 
 		if (XRConfig.showDebug){
 			stats = new Stats();
