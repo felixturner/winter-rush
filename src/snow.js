@@ -4,23 +4,23 @@
 	by Felix Turner / @felixturner / www.airtight.cc
 **/
 
-var XRSnow = function() {
+var WRSnow = function() {
 
 	var SNOW_COUNT = 400;
 	var SNOW_EDGE = 100;
 	var SNOW_TOP = 1600;
 	var SNOW_BOTTOM = -300;
+	var BAR_COUNT = 20;
 	
-	var snow = [];
 	var windDir = 0;
 	var windStrength = 0;
 	var snowTime = 0;
 	var snowGeometry;
 	var bars;
-	var barCount = 20;
 	var barMaterial;
-	var textureSky;
 	var skyMaterial;
+
+	var snoise = new ImprovedNoise();
 
 	function init(){
 
@@ -33,9 +33,9 @@ var XRSnow = function() {
 		for ( i = 0; i < SNOW_COUNT; i ++ ) {
 
 			var vertex = new THREE.Vector3();
-			vertex.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
+			vertex.x = ATUtil.randomRange(-WRConfig.FLOOR_WIDTH/2,WRConfig.FLOOR_WIDTH/2);
 			vertex.y = ATUtil.randomRange(SNOW_BOTTOM,SNOW_TOP);
-			vertex.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
+			vertex.z = ATUtil.randomRange(-WRConfig.FLOOR_DEPTH/2,WRConfig.FLOOR_DEPTH/2);
 
 			snowGeometry.vertices.push( vertex );
 
@@ -53,7 +53,7 @@ var XRSnow = function() {
 		} );
 
 		var particles = new THREE.PointCloud( snowGeometry, snowMaterial );
-		XRGame.getMoverGroup().add( particles );
+		WRGame.getMoverGroup().add( particles );
 
 		//STRIPS
 		//add bars for at high speed
@@ -75,7 +75,7 @@ var XRSnow = function() {
 
 		bars = [];
 
-		for (i = 0; i < barCount; i++) {
+		for (i = 0; i < BAR_COUNT; i++) {
 
 			var bar = new THREE.Mesh( barGeom, barMaterial );
 
@@ -83,21 +83,21 @@ var XRSnow = function() {
 			bar.origYScale = ATUtil.randomRange(0.2,2);
 			bar.scale.z = ATUtil.randomRange(0.2,2);
 
-			XRGame.getMoverGroup().add( bar );
+			WRGame.getMoverGroup().add( bar );
 
 			bar.rotation.x = Math.PI/2;
 			bar.rotation.y = Math.PI/2;
 
-			bar.position.x = ATUtil.randomRange(-FLOOR_WIDTH/2,FLOOR_WIDTH/2);
+			bar.position.x = ATUtil.randomRange(-WRConfig.FLOOR_WIDTH/2,WRConfig.FLOOR_WIDTH/2);
 			bar.position.y = ATUtil.randomRange(-300,600);
-			bar.position.z = ATUtil.randomRange(-FLOOR_DEPTH/2,FLOOR_DEPTH/2);
+			bar.position.z = ATUtil.randomRange(-WRConfig.FLOOR_DEPTH/2,WRConfig.FLOOR_DEPTH/2);
 
 			bars.push(bar);
 
 		}
 
 		//SKY
-		textureSky = THREE.ImageUtils.loadTexture( "res/img/xmas-sky.jpg" );
+		var textureSky = THREE.ImageUtils.loadTexture( "res/img/xmas-sky.jpg" );
 		skyMaterial = new THREE.MeshBasicMaterial( {
 			map:textureSky,
 			transparent:true,
@@ -107,7 +107,7 @@ var XRSnow = function() {
 
 		var planeGeometry = new THREE.PlaneGeometry( 800, 300,1,1 );
 		skyMesh = new THREE.Mesh( planeGeometry, skyMaterial );
-		XRMain.getScene().add( skyMesh );			
+		WRMain.getScene().add( skyMesh );			
 		skyMesh.scale.x = skyMesh.scale.y = 15;
 		skyMesh.position.z = -3600;
 		skyMesh.position.y = 1500;
@@ -120,20 +120,20 @@ var XRSnow = function() {
 		for(  i = 0; i < SNOW_COUNT; i++) {
 
 			var vert = snowGeometry.vertices[i];
-			vert.z += MOVE_STEP;
+			vert.z += WRConfig.MOVE_STEP;
 
-			if (vert.z + XRGame.getMoverGroup().position.z > FLOOR_DEPTH/2){
-				vert.z	-= FLOOR_DEPTH;
+			if (vert.z + WRGame.getMoverGroup().position.z > WRConfig.FLOOR_DEPTH/2){
+				vert.z	-= WRConfig.FLOOR_DEPTH;
 			}			 
 
 		}
 		snowGeometry.verticesNeedUpdate = true;
 
-		for (i = 0; i < barCount; i++) {
+		for (i = 0; i < BAR_COUNT; i++) {
 			var p = bars[i].position;
-			p.z += MOVE_STEP;
-			if (p.z + XRGame.getMoverGroup().position.z > FLOOR_DEPTH/2){
-				p.z	-= FLOOR_DEPTH;
+			p.z += WRConfig.MOVE_STEP;
+			if (p.z + WRGame.getMoverGroup().position.z > WRConfig.FLOOR_DEPTH/2){
+				p.z	-= WRConfig.FLOOR_DEPTH;
 			}		
 		}
 
@@ -159,29 +159,29 @@ var XRSnow = function() {
 			}
 
 			//only do fancy wind if not playing
-			if (!XRGame.getPlaying()){
+			if (!WRGame.getPlaying()){
 
 				vert.x += Math.cos(windDir)*windStrength;
 				vert.z += Math.sin(windDir)*windStrength;
 
 					//wrap around edges
-				if (vert.x > FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = -FLOOR_WIDTH/2 + SNOW_EDGE;
-				if (vert.x < -FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = FLOOR_WIDTH/2 + SNOW_EDGE;
+				if (vert.x > WRConfig.FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = -WRConfig.FLOOR_WIDTH/2 + SNOW_EDGE;
+				if (vert.x < -WRConfig.FLOOR_WIDTH/2 + SNOW_EDGE) vert.x = WRConfig.FLOOR_WIDTH/2 + SNOW_EDGE;
 
-				if (vert.z > FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = -FLOOR_DEPTH/2 + SNOW_EDGE;
-				if (vert.z < -FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = FLOOR_DEPTH/2 + SNOW_EDGE;
+				if (vert.z > WRConfig.FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = -WRConfig.FLOOR_DEPTH/2 + SNOW_EDGE;
+				if (vert.z < -WRConfig.FLOOR_DEPTH/2 + SNOW_EDGE) vert.z = WRConfig.FLOOR_DEPTH/2 + SNOW_EDGE;
 		
 			}
 
 		}
 		snowGeometry.verticesNeedUpdate = true;
 
-		var opac = (XRGame.getSpeed() - 0.5) *2;
+		var opac = (WRGame.getSpeed() - 0.5) *2;
 
 		barMaterial.opacity = opac*2/3;
 		skyMaterial.opacity = opac;
 
-		for (i = 0; i < barCount; i++) {
+		for (i = 0; i < BAR_COUNT; i++) {
 			var p = bars[i].position;
 			p.z +=40;
 

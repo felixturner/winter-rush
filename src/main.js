@@ -5,21 +5,22 @@
 **/
 
 //Global Config
-var XRConfig = {
+var WRConfig = {
+	
+	//debug toggles
 	playSound:true,
 	playMusic:true,
 	hitDetect:true,
-	showDebug:true
+	showDebug:true,
+
+	//const dimensions
+	FLOOR_WIDTH: 3600, 	// size of floor in x direction
+	FLOOR_DEPTH: 7200, 	//size of floor in z direction
+	MOVE_STEP: 500 		//z distance to move before recreating a new floor strip
+
 };
 
-//global
-var FLOOR_WIDTH = 3600; //x
-var FLOOR_DEPTH = 7200; //z
-var MOVE_STEP = 500; //number of z units to move before recreating a new background strip
-
-var snoise = new ImprovedNoise();
-
-var XRMain = function() {
+var WRMain = function() {
 
 	var camera, scene, renderer;
 
@@ -47,15 +48,14 @@ var XRMain = function() {
 	var bkgndColor = 0x061837;
 	var isMobile = false;
 
-	//0->2 indicating which splash page is showing
-	var splashMode = 0; 
+	var splashMode = 0; //0->2 indicating which splash page is showing
 	var isFirstGame = true;
 	
 	function init() {
 
-		XRConfig.showDebug = window.location.href.indexOf("?dev")  > -1;
+		WRConfig.showDebug = window.location.href.indexOf("?dev")  > -1;
 
-		if (XRConfig.showDebug){
+		if (WRConfig.showDebug){
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
 			stats.domElement.style.top = '0px';
@@ -84,13 +84,13 @@ var XRMain = function() {
 		// }
 
 		//init audio
-		if (XRConfig.playSound){
+		if (WRConfig.playSound){
 			sndPickup = new Howl( {urls: ["res/audio/point.mp3"]}); 
 			sndCollide = new Howl({ urls: ["res/audio/hit.mp3"]}); 
 			sndBest = new Howl( {urls: ["res/audio/best.mp3"]}); 
 		}
 
-		if (XRConfig.playMusic){
+		if (WRConfig.playMusic){
 			sndMusic = new Howl( {urls: ["res/audio/rouet.mp3"],loop: true,}); 
 			$("#music-toggle").on("click",toggleMusic);
 			$("#music-toggle").on("tap",toggleMusic);
@@ -100,10 +100,10 @@ var XRMain = function() {
 
 		var size = 800;
 		camera = new THREE.PerspectiveCamera( 75, 8 / 6, 1, 10000 );
-		camera.position.z = FLOOR_DEPTH/2 - 300;
+		camera.position.z = WRConfig.FLOOR_DEPTH/2 - 300;
 
 		scene = new THREE.Scene();
-		scene.fog = new THREE.Fog( bkgndColor, FLOOR_DEPTH/2, FLOOR_DEPTH );
+		scene.fog = new THREE.Fog( bkgndColor, WRConfig.FLOOR_DEPTH/2, WRConfig.FLOOR_DEPTH );
 
 		renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
@@ -123,7 +123,7 @@ var XRMain = function() {
 		composer.addPass( superPass );
 		superPass.renderToScreen = true;
 
-		XRGame.init();
+		WRGame.init();
 
 		resize();
 
@@ -208,23 +208,23 @@ var XRMain = function() {
 	}
 
 	function playCollide(){
-		if (XRConfig.playSound) sndCollide.play();
+		if (WRConfig.playSound) sndCollide.play();
 	}
 
 	function onScorePoint(){
-		if (XRConfig.playSound) sndPickup.play();
+		if (WRConfig.playSound) sndPickup.play();
 		score += 1;
 		$("#score-text").text(score);
 		TweenMax.fromTo($('#score-text') , 0.4, {scale: 2},{scale: 1,ease:Bounce.easeOut});
 
 		if (score === hiScore + 1 && hiScore !== 0){
-			if (XRConfig.playSound) sndBest.play();
+			if (WRConfig.playSound) sndBest.play();
 		}
 	}
 
 	function onGameOver(){
 
-		if (XRConfig.playSound) sndCollide.play();
+		if (WRConfig.playSound) sndCollide.play();
 
 		//display score
 		TweenMax.to($('#score-text') , 0.1, {autoAlpha: 0});
@@ -263,43 +263,43 @@ var XRMain = function() {
 		score = 0;
 		$("#score-text").text(score);
 
-		if (isFirstGame && XRConfig.playMusic ) sndMusic.play();						
+		if (isFirstGame && WRConfig.playMusic ) sndMusic.play();						
 
-		XRGame.startGame(isFirstGame);
+		WRGame.startGame(isFirstGame);
 		isFirstGame = false;
 	}
 
 	function animate(){
 
 		requestAnimationFrame( animate );
-		XRGame.animate();
-		if (XRConfig.showDebug){
+		WRGame.animate();
+		if (WRConfig.showDebug){
 			stats.update();
 		}
 
 		//faster = more hue amount and faster shifts
 		var hueAmount;
-		if (XRGame.getSpeed() < 0.5){
+		if (WRGame.getSpeed() < 0.5){
 			hueAmount = 0;
 		}else{
-			hueAmount = (XRGame.getSpeed()- 0.5) * 2;
+			hueAmount = (WRGame.getSpeed()- 0.5) * 2;
 		}
 		superPass.uniforms.hueAmount.value =  hueAmount;
 
-		hueTime += XRGame.getSpeed() * XRGame.getSpeed() * 0.05;
+		hueTime += WRGame.getSpeed() * WRGame.getSpeed() * 0.05;
 		var hue = hueTime % 2 - 1; //put in range -1 to 1
 		superPass.uniforms.hue.value =  hue;
 		superPass.uniforms.brightness.value =  fxParams.brightness;
 		composer.render( 0.1 );
 
-		//XRMain.trace( XRGame.getSpeed());
+		//WRMain.trace( WRGame.getSpeed());
 
 	}
 
 	//INPUT HANDLERS
 	function onTouchStart( event ) {
 
-		if (!XRGame.getPlaying() && XRGame.getAcceptInput()){
+		if (!WRGame.getPlaying() && WRGame.getAcceptInput()){
 			onGameStart();
 		}
 
@@ -310,9 +310,9 @@ var XRMain = function() {
 			var xpos = event.touches[ i ].pageX;
 
 			if (xpos > window.innerWidth / 2){
-				XRGame.setRightDown(true);
+				WRGame.setRightDown(true);
 			}else{
-				XRGame.setLeftDown(true);
+				WRGame.setLeftDown(true);
 			}
 		}
 	}
@@ -325,9 +325,9 @@ var XRMain = function() {
 			var xpos = event.changedTouches[ i ].pageX;
 
 			if (xpos > window.innerWidth / 2){
-				XRGame.setRightDown(false);
+				WRGame.setRightDown(false);
 			}else{
-				XRGame.setLeftDown( false);
+				WRGame.setLeftDown( false);
 			}
 		}
 	}
@@ -338,10 +338,10 @@ var XRMain = function() {
 
 		switch ( event.keyCode ) {
 			case 39: /* RIGHT */
-				XRGame.setRightDown(false);
+				WRGame.setRightDown(false);
 				break;
 			case 37: /* LEFT */
-				XRGame.setLeftDown(false);					
+				WRGame.setLeftDown(false);					
 				break;
 		}
 
@@ -356,16 +356,16 @@ var XRMain = function() {
 
 		lastEvent = event;
 
-		if (!XRGame.getPlaying() && XRGame.getAcceptInput()){
+		if (!WRGame.getPlaying() && WRGame.getAcceptInput()){
 			onGameStart();
 		}
 		
 		switch ( event.keyCode ) {
 			case 39: /* RIGHT */
-				XRGame.setRightDown(true);
+				WRGame.setRightDown(true);
 				break;
 			case 37: /* LEFT */
-				XRGame.setLeftDown( true);
+				WRGame.setLeftDown( true);
 				break;
 			
 		}
@@ -373,13 +373,13 @@ var XRMain = function() {
 
 	function onMouseDown(){
 
-		if (!XRGame.getPlaying()){
+		if (!WRGame.getPlaying()){
 			onGameStart();
 		}
 	}
 
 	function trace(text){
-		if (XRConfig.showDebug){
+		if (WRConfig.showDebug){
 			$("#debug-text").text(text);
 		}
 	}
@@ -389,8 +389,8 @@ var XRMain = function() {
 	// 	var cuttoff = 5;
 	// 	var tiltedRight = eventData.beta > cuttoff;
 	// 	var tiltedLeft = eventData.beta < -cuttoff;
-	// 	XRGame.setRightDown(tiltedRight);
-	// 	XRGame.setLeftDown(tiltedLeft);
+	// 	WRGame.setRightDown(tiltedRight);
+	// 	WRGame.setLeftDown(tiltedLeft);
 	// }
 
 	return {
@@ -408,5 +408,5 @@ var XRMain = function() {
 }();
 
 $(document).ready(function() {
-	XRMain.init();
+	WRMain.init();
 });

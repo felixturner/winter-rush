@@ -4,7 +4,7 @@
 	by Felix Turner / @felixturner / www.airtight.cc
 **/
 
-var XRGame = function() {
+var WRGame = function() {
 
 	var ACCEL = 2000;
 	var MAX_SPEED_ACCEL = 70;
@@ -15,11 +15,11 @@ var XRGame = function() {
 	var TREE_COLS = [0x466310,0x355B4B,0x449469];
 	var TREE_COUNT = 10;
 	var FLOOR_RES = 20;
-	var FLOOR_YPOS = -300; //y
-	var FLOOR_THICKNESS = 300;//250;
+	var FLOOR_YPOS = -300;
+	var FLOOR_THICKNESS = 300;
 
 	var stepCount = 0;
-	var moveSpeed = 0; //z-units per second
+	var moveSpeed = 0; //z distance per second
 	var maxSpeed; //increments over time
 	var slideSpeed = 0;
 	var sliding = false;
@@ -27,6 +27,7 @@ var XRGame = function() {
 	var rightDown = false;
 	var leftDown = false;
 	var playing = false;
+	var acceptInput = true;
 	var clock;
 
 	var trees = [];
@@ -41,9 +42,8 @@ var XRGame = function() {
 	var trunkMaterial;
 	var treeGeom;
 	var trunkGeom;
-
-	var acceptInput = true;
-
+	
+	var snoise = new ImprovedNoise();
 
 	function init(){
 
@@ -52,21 +52,21 @@ var XRGame = function() {
 		//lights
 		//HemisphereLight(skyColorHex, groundColorHex, intensity)
 		var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.6);
-		XRMain.getScene().add( hemisphereLight );
+		WRMain.getScene().add( hemisphereLight );
 		hemisphereLight.position.y = 300;
 
 		//middle light
 		var centerLight = new THREE.PointLight( 0xFFFFFF, 0.8, 4500 );
-		XRMain.getScene().add(centerLight);
-		centerLight.position.z = FLOOR_DEPTH/4;
+		WRMain.getScene().add(centerLight);
+		centerLight.position.z = WRConfig.FLOOR_DEPTH/4;
 		centerLight.position.y = 500;
 
 		var frontLight = new THREE.PointLight( 0xFFFFFF, 1, 2500 );
-		XRMain.getScene().add(frontLight);
-		frontLight.position.z = FLOOR_DEPTH/2;
+		WRMain.getScene().add(frontLight);
+		frontLight.position.z = WRConfig.FLOOR_DEPTH/2;
 
 		moverGroup = new THREE.Object3D();
-		XRMain.getScene().add( moverGroup );
+		WRMain.getScene().add( moverGroup );
 
 		//make floor
 		var floorGroup = new THREE.Object3D();
@@ -79,14 +79,14 @@ var XRGame = function() {
 		});
 
 		//add extra x width
-		floorGeometry = new THREE.PlaneGeometry( FLOOR_WIDTH + 1200, FLOOR_DEPTH , FLOOR_RES,FLOOR_RES );
+		floorGeometry = new THREE.PlaneGeometry( WRConfig.FLOOR_WIDTH + 1200, WRConfig.FLOOR_DEPTH , FLOOR_RES,FLOOR_RES );
 		var floorMesh = new THREE.Mesh( floorGeometry, floorMaterial );
 		floorGroup.add( floorMesh );
 		moverGroup.add( floorGroup );
 		floorMesh.rotation.x = Math.PI/2;
 		//floorMesh.rotation.z = Math.PI/2;
 		floorGroup.position.y = FLOOR_YPOS;
-		moverGroup.position.z = - MOVE_STEP;
+		moverGroup.position.z = - WRConfig.MOVE_STEP;
 		floorGroup.position.z = 500;
 
 		//make trees
@@ -124,8 +124,8 @@ var XRGame = function() {
 			moverGroup.add( tree );
 			tree.posi = Math.random();
 			tree.posj = Math.random();
-			tree.position.x = tree.posj * FLOOR_WIDTH - FLOOR_WIDTH/2;
-			tree.position.z = - (tree.posi * FLOOR_DEPTH) + FLOOR_DEPTH/2;
+			tree.position.x = tree.posj * WRConfig.FLOOR_WIDTH - WRConfig.FLOOR_WIDTH/2;
+			tree.position.z = - (tree.posi * WRConfig.FLOOR_DEPTH) + WRConfig.FLOOR_DEPTH/2;
 			tree.rotation.y = Math.random()*Math.PI*2;
 			trees.push(tree);
 			tree.collided = false;
@@ -136,24 +136,24 @@ var XRGame = function() {
 		for( i = 0; i < EDGE_TREE_COUNT; i++) {
 			tree = makeTree(1.3,0);
 			moverGroup.add( tree );
-			tree.position.x = FLOOR_WIDTH/2 + 300;
-			tree.position.z = FLOOR_DEPTH * i/EDGE_TREE_COUNT -  FLOOR_DEPTH/2;
+			tree.position.x = WRConfig.FLOOR_WIDTH/2 + 300;
+			tree.position.z = WRConfig.FLOOR_DEPTH * i/EDGE_TREE_COUNT -  WRConfig.FLOOR_DEPTH/2;
 
 		}
 
 		for( i = 0; i < EDGE_TREE_COUNT; i++) {
 			tree = makeTree(1.3,0);
 			moverGroup.add( tree );
-			tree.position.x = -(FLOOR_WIDTH/2 + 300);
-			tree.position.z = FLOOR_DEPTH * i/EDGE_TREE_COUNT -  FLOOR_DEPTH/2;
+			tree.position.x = -(WRConfig.FLOOR_WIDTH/2 + 300);
+			tree.position.z = WRConfig.FLOOR_DEPTH * i/EDGE_TREE_COUNT -  WRConfig.FLOOR_DEPTH/2;
 		}
 
 		//add floating present
 		presentGroup = new THREE.Object3D();
 		moverGroup.add( presentGroup );
 
-		presentGroup.position.x = ATUtil.randomRange(-FLOOR_WIDTH/2, FLOOR_WIDTH/2);
-		presentGroup.position.z = ATUtil.randomRange(-FLOOR_DEPTH/2, FLOOR_DEPTH/2);
+		presentGroup.position.x = ATUtil.randomRange(-WRConfig.FLOOR_WIDTH/2, WRConfig.FLOOR_WIDTH/2);
+		presentGroup.position.z = ATUtil.randomRange(-WRConfig.FLOOR_DEPTH/2, WRConfig.FLOOR_DEPTH/2);
 		//presentGroup.position.y = 200;
 
 		var presentMaterial = new THREE.MeshPhongMaterial({
@@ -180,7 +180,7 @@ var XRGame = function() {
 		presentGroup.collided = false;
 
 		
-		XRSnow.init();
+		WRSnow.init();
 
 		setFloorHeight();
 
@@ -211,14 +211,14 @@ var XRGame = function() {
 
 		//apply noise to floor
 
-		//move mover back by MOVE_STEP
+		//move mover back by WRConfig.MOVE_STEP
 		stepCount++;
-		moverGroup.position.z = - MOVE_STEP;
+		moverGroup.position.z = - WRConfig.MOVE_STEP;
 
 		//calculate vert psons base on noise
 		var i;
 		var ipos;
-		var offset = stepCount *MOVE_STEP/FLOOR_DEPTH * FLOOR_RES;
+		var offset = stepCount *WRConfig.MOVE_STEP/WRConfig.FLOOR_DEPTH * FLOOR_RES;
 
 		for( i = 0; i < FLOOR_RES + 1; i++) {
 			for( var j = 0; j < FLOOR_RES + 1; j++) {
@@ -231,31 +231,31 @@ var XRGame = function() {
 		for(  i = 0; i < TREE_COUNT; i++) {
 
 			var tree = trees[i];
-			tree.position.z +=MOVE_STEP;
+			tree.position.z +=WRConfig.MOVE_STEP;
 
-			if (tree.position.z + moverGroup.position.z > FLOOR_DEPTH/2){
+			if (tree.position.z + moverGroup.position.z > WRConfig.FLOOR_DEPTH/2){
 
 				tree.collided = false;
-				tree.position.z	-= FLOOR_DEPTH;
-				ipos = tree.posi + offset/FLOOR_RES * FLOOR_DEPTH;
+				tree.position.z	-= WRConfig.FLOOR_DEPTH;
+				ipos = tree.posi + offset/FLOOR_RES * WRConfig.FLOOR_DEPTH;
 				//re-randomize x pos
 				tree.posj = Math.random();
-				tree.position.x = tree.posj * FLOOR_WIDTH - FLOOR_WIDTH/2;
+				tree.position.x = tree.posj * WRConfig.FLOOR_WIDTH - WRConfig.FLOOR_WIDTH/2;
 				tree.visible = true;
 			}			 
 
 		}
 
-		XRSnow.shift();
+		WRSnow.shift();
 
 		//shift present
-		presentGroup.position.z += MOVE_STEP;
-		if (presentGroup.position.z + moverGroup.position.z > FLOOR_DEPTH/2){
+		presentGroup.position.z += WRConfig.MOVE_STEP;
+		if (presentGroup.position.z + moverGroup.position.z > WRConfig.FLOOR_DEPTH/2){
 			presentGroup.collided = false;
-			presentGroup.position.z	-= FLOOR_DEPTH;
+			presentGroup.position.z	-= WRConfig.FLOOR_DEPTH;
 			//re-randomize x pos
 			presentGroup.posj = Math.random();
-			var xRange = FLOOR_WIDTH/2 * 0.7;
+			var xRange = WRConfig.FLOOR_WIDTH/2 * 0.7;
 			presentGroup.position.x = ATUtil.randomRange(-xRange,xRange);
 		
 		}		
@@ -296,15 +296,15 @@ var XRGame = function() {
 			}
 
 			//bounce off edges of rails
-			var nextx = XRMain.getCamera().position.x + delta * slideSpeed;
+			var nextx = WRMain.getCamera().position.x + delta * slideSpeed;
 
-			if (nextx > FLOOR_WIDTH/2 || nextx < -FLOOR_WIDTH/2){
+			if (nextx > WRConfig.FLOOR_WIDTH/2 || nextx < -WRConfig.FLOOR_WIDTH/2){
 				slideSpeed = -slideSpeed;
-				XRMain.playCollide();
+				WRMain.playCollide();
 			}
 
 
-			XRMain.getCamera().position.x += delta * slideSpeed;
+			WRMain.getCamera().position.x += delta * slideSpeed;
 
 			//TILT
 			//moverGroup.rotation.z = 0.016 * slideSpeed * 0.003;
@@ -328,16 +328,16 @@ var XRGame = function() {
 			setFloorHeight();
 		}
 
-		XRSnow.animate();
+		WRSnow.animate();
 		
 		//SIMPLE HIT DETECT
 
-		if (XRConfig.hitDetect){
+		if (WRConfig.hitDetect){
 
 			var p;
 			var dist;
 
-			var camPos = XRMain.getCamera().position.clone();
+			var camPos = WRMain.getCamera().position.clone();
 			camPos.z -= 200;
 
 			p = presentGroup.position.clone();
@@ -346,7 +346,7 @@ var XRGame = function() {
 			if (dist < 200 && !presentGroup.collided){
 				//GOT POINT
 				presentGroup.collided = true;
-				XRMain.onScorePoint();
+				WRMain.onScorePoint();
 			}
 
 
@@ -383,16 +383,16 @@ var XRGame = function() {
 		}
 
 		//fade out
-		TweenMax.fromTo(XRMain.fxParams,0.3,{brightness:0},{brightness:-1});
+		TweenMax.fromTo(WRMain.fxParams,0.3,{brightness:0},{brightness:-1});
 		TweenMax.delayedCall(0.3,resetField);
-		TweenMax.fromTo(XRMain.fxParams,0.3,{brightness:-1},{brightness:0,delay:0.3});
+		TweenMax.fromTo(WRMain.fxParams,0.3,{brightness:-1},{brightness:0,delay:0.3});
 		TweenMax.delayedCall(0.6,startRun);
 
 	}
 
 	function resetField(){
 		
-		var camPos = XRMain.getCamera().position;
+		var camPos = WRMain.getCamera().position;
 		//put cam in middle
 		camPos.x = 0;
 		//set tilt to 0
@@ -403,7 +403,7 @@ var XRGame = function() {
 			p = trees[i].position.clone();
 			p.add(moverGroup.position);
 
-			if (p.z < camPos.z && p.z > camPos.z - FLOOR_DEPTH/2){
+			if (p.z < camPos.z && p.z > camPos.z - WRConfig.FLOOR_DEPTH/2){
 				trees[i].collided = true;
 				trees[i].visible = false;
 			}
@@ -427,7 +427,7 @@ var XRGame = function() {
 		acceptInput = false;
 		//wait before re-enabling start game
 		TweenMax.delayedCall(1,onAcceptInput);
-		XRMain.onGameOver();
+		WRMain.onGameOver();
 	
 	}
 
