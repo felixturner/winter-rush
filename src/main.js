@@ -85,13 +85,13 @@ var WRMain = function() {
 
 		//init audio
 		if (WRConfig.playSound){
-			sndPickup = new Howl( {urls: ["res/audio/point.mp3"]}); 
-			sndCollide = new Howl({ urls: ["res/audio/hit.mp3"]}); 
-			sndBest = new Howl( {urls: ["res/audio/best.mp3"]}); 
+			sndPickup = new Howl( {src: ["res/audio/point.mp3"]}); 
+			sndCollide = new Howl({ src: ["res/audio/hit.mp3"]}); 
+			sndBest = new Howl( {src: ["res/audio/best.mp3"]}); 
 		}
 
 		if (WRConfig.playMusic){
-			sndMusic = new Howl( {urls: ["res/audio/rouet.mp3"],loop: true,}); 
+			sndMusic = new Howl( {src: ["res/audio/rouet.mp3"],loop: true}); 
 			$("#music-toggle").on("click",toggleMusic);
 			$("#music-toggle").on("tap",toggleMusic);
 		}
